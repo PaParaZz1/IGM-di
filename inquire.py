@@ -5,7 +5,7 @@ from InquirerPy.validator import PathValidator, EmptyInputValidator
 
 from igm.conf import InquireRestart
 from igm.env import env
-from igmdi.data import env_choices, algo_choices, subenv_choices, env_doc_link, algo_doc_link
+from igmdi.data import env_choices, algo_choices, subenv_choices, env_doc_link, algo_doc_link, filter_algo_choices
 from igmdi.utils import pretty_print
 from igmdi.runnable import generate_runnable_entry
 
@@ -50,11 +50,15 @@ def env_query():
     return di_env
 
 
-def algorithm_query():
+def algorithm_query(di_env=None):
     global LAST_ALGO
+    if di_env is None:
+        choices = algo_choices
+    else:
+        choices = filter_algo_choices(di_env)
     algo = env.LAST_ALGO or inquirer.rawlist(
         message="What's your algorithm:",
-        choices=algo_choices,
+        choices=choices,
         multiselect=True,
         default=LAST_ALGO,
         instruction="\nPress <Enter> to submit, <Space> to multi-select",
@@ -82,7 +86,7 @@ def inquire_func():
         di_env = env_query()
     elif view == "Normal View":
         di_env = env_query()
-        algo = algorithm_query()
+        algo = algorithm_query(di_env)
 
     mode = inquirer.select(
         message="Select mode:",
@@ -111,10 +115,16 @@ def inquire_func():
             0,
         ]
         hpo = False
+    doc = '\n'
+    for item in di_env:
+        doc += "Env doc of '{}': {}\n".format(item, env_doc_link[item])
+    for item in algo:
+        doc += "Algo doc of '{}': {}\n".format(item, algo_doc_link[item])
     metadata = {
         'env': di_env,
         'algo': algo,
         'seed': seed,
+        'doc': doc,
     }
     confirm_instruction = "\n" + pretty_print({'metadata': metadata}) + "(Y/n)"
     confirm = inquirer.confirm(
@@ -124,10 +134,8 @@ def inquire_func():
     ).execute()
 
     print("Your DI-engine project has started, you can refer to following link for more related information:")
-    for item in di_env:
-        print("\tEnv doc of '{}': {}".format(item, env_doc_link[item]))
-    for item in algo:
-        print("\tAlgo doc of '{}': {}".format(item, algo_doc_link[item]))
+    for item in doc.split('\n')[1:-1]:
+        print('\t{}'.format(item))
 
     if env.NON_CONFIRM:
         confirm = True

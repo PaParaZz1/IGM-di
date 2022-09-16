@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import reduce
 
 env_choices = [
     'cartpole',
@@ -22,6 +23,11 @@ subenv_choices = {
 env_id_mapping = {
     'cartpole': 'CartPole-v0',
     'pendulum': 'Pendulum-v1',
+}
+
+env_algo_mapping = {
+    'cartpole': set(['dqn', 'rainbow', 'r2d2', 'a2c', 'ppo', 'impala']),
+    'pendulum': set(['ddpg', 'td3', 'sac']),
 }
 
 algo_choices = [
@@ -63,3 +69,14 @@ algo_doc_link.update(
         "sac": "https://di-engine-docs.readthedocs.io/en/latest/12_policies/sac.html",
     }
 )
+
+
+def filter_algo_choices(env, mode='intersection'):
+    env = list(env.keys())
+    sets = []
+    for e in env:
+        sets.append(env_algo_mapping[e])
+    if mode == 'intersection':
+        return reduce(lambda x, y: x.intersection(y), sets)
+    else:
+        raise KeyError("not support mode: {}".format(mode))

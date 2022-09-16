@@ -6,7 +6,10 @@ on_policy_algo = set(['a2c', 'ppo'])
 
 def generate_runnable_entry(metadata):
     dirname = os.path.join(os.path.dirname(ding.__path__[0]), 'dizoo')
-    env_mapping = {'cartpole': ['classic_control', 'cartpole', 'config']}
+    env_mapping = {
+        'cartpole': ['classic_control', 'cartpole', 'config'],
+        'pendulum': ['classic_control', 'pendulum', 'config'],
+    }
     base_dir = 'experiment'
     metadata['task_path'] = []
 

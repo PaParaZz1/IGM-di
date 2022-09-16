@@ -1,8 +1,18 @@
+from rich import print
+from tabulate import tabulate
 from igm.conf import igm_project, cpy, cpip
 
 
 def info():
-    print('This is the project of DI-engine.')
+    print('This is the IGM generated project of DI-engine:')
+    headers = ['Env\Algo'] + {{user.algo}}
+    data = []
+    for k in {{user.env}}:
+        tmp = [k] + ['Available'] * len({{user.algo}})
+        data.append(tmp)
+    info = tabulate(data, headers=headers, tablefmt='grid')
+    print(info)
+    print({{user.doc | potc}})
 
 
 igm_project(
@@ -14,6 +24,7 @@ igm_project(
     scripts={
         None: cpy('main.py'),
         'info': info,
+        'tbviz': 'tensorboard --logdir=. --bind_all',
         'install': cpip('install', '-r', 'requirements.txt'),
     }
 )
