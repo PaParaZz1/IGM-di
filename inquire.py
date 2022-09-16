@@ -1,3 +1,4 @@
+import re
 from rich import print
 from InquirerPy import inquirer
 from InquirerPy.validator import PathValidator, EmptyInputValidator
@@ -6,16 +7,34 @@ from igm.conf import InquireRestart
 from igm.env import env
 from igmdi.data import env_choices, algo_choices, subenv_choices, env_doc_link, algo_doc_link
 from igmdi.utils import pretty_print
+from igmdi.runnable import generate_runnable_entry
+
+
+def seed_filter(s):
+    if s[-1] == ',':
+        s = s[:-1]
+    try:
+        return [
+            int(s),
+        ]
+    except:  # noqa
+        return [int(t) for t in s.strip().split(',')]
+
 
 LAST_ENV, LAST_ALGO = None, None
 
 
 def env_query():
     global LAST_ENV
+    if LAST_ENV is not None:
+        default_value = list(LAST_ENV.keys())
+    else:
+        default_value = None
     di_env = env.LAST_ENV or inquirer.rawlist(
         message="Pick your env:",
         choices=env_choices,
         multiselect=True,
+        default=default_value,
         instruction="\nPress <Enter> to submit, <Space> to multi-select",
     ).execute()
     di_env = {k: None for k in di_env}
@@ -46,16 +65,16 @@ def algorithm_query():
 def inquire_func():
     global LAST_ENV, LAST_ALGO
     print('We are trying to create a project to use DI-engine')
-    view = inquirer.select(
-        message="Select user view:",
-        choices=[
-            "Normal View",
-            "Algorithm View",
-            "Environment View",
-        ],
-        default=LAST_ENV,
-        validate=EmptyInputValidator,
-    ).execute()
+    # view = inquirer.select(
+    #     message="Select user view:",
+    #     choices=[
+    #         "Normal View",
+    #         "Algorithm View",
+    #         "Environment View",
+    #     ],
+    #     validate=EmptyInputValidator,
+    # ).execute()
+    view = "Normal View"
 
     if view == "Algorithm View":
         algo = algorithm_query()
@@ -75,14 +94,12 @@ def inquire_func():
     ).execute()
 
     if mode == 'Customized Mode':
-        exp_dir = inquirer.filepath(
-            message="Enter experiment directory filepath:",
-            default="./",
-            validate=PathValidator(is_dir=True, message="Input is not a directory"),
-            only_directories=True,
-        ).execute()
-        multi_seed = inquirer.confirm(
-            message="Do you want to run your experiment with several random seeds (default: 1-3)?", default=False
+        seed = inquirer.text(
+            message="Please indicate the random seed list for each experiment:",
+            default="0",
+            filter=seed_filter,
+            validate=lambda s: re.match("\d(,\d)*", s),
+            invalid_message="Please use correct format, e.g. 0,1,3"
         ).execute()
         hpo = inquirer.confirm(
             message="Do you want to run your experiment with HPO (Hyper-Parameters Optimization)?", default=False
@@ -90,38 +107,35 @@ def inquire_func():
         if hpo:
             raise NotImplementedError
     else:
-        exp_dir = "./"
-        multi_seed = False
+        seed = [
+            0,
+        ]
         hpo = False
     metadata = {
         'env': di_env,
         'algo': algo,
-        'exp_dir': exp_dir,
-        'multi_seed': multi_seed,
+        'seed': seed,
     }
     confirm_instruction = "\n" + pretty_print({'metadata': metadata}) + "(Y/n)"
     confirm = inquirer.confirm(
-        message="Do you confirm the following experiment setting:",
+        message="Do you confirm the following project setting:",
         default=True,
         instruction=confirm_instruction,
     ).execute()
 
-    print(
-        "Your DI-engine project has started in '{}', you can refer to following link for more related information:".
-        format(exp_dir)
-    )
+    print("Your DI-engine project has started, you can refer to following link for more related information:")
     for item in di_env:
-        print("\tenv doc of '{}': {}".format(item, env_doc_link[item]))
+        print("\tEnv doc of '{}': {}".format(item, env_doc_link[item]))
     for item in algo:
-        print("\talgo doc of '{}': {}".format(item, algo_doc_link[item]))
+        print("\tAlgo doc of '{}': {}".format(item, algo_doc_link[item]))
 
     if env.NON_CONFIRM:
         confirm = True
     else:
-        confirm = inquirer.confirm(message=f"Customize your DI-engine project, confirm?").execute()
+        confirm = inquirer.confirm(message="Customize your DI-engine project, confirm?").execute()
 
     if confirm:
-        return metadata
+        return generate_runnable_entry(metadata)
     else:
         # save this time's fillings
         LAST_ENV, LAST_ALGO = di_env, algo
