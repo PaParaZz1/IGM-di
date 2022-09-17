@@ -1,14 +1,14 @@
+from igm.conf import igm_project, cpy, cpip
 from rich import print
 from tabulate import tabulate
-from igm.conf import igm_project, cpy, cpip
 
 
 def info():
     print('This is the IGM generated project of DI-engine:')
-    headers = ['Env\Algo'] + {{user.algo}}
+    headers = ['Env\Algo'] + {{user.algo | potc}}
     data = []
-    for k in {{user.env}}:
-        tmp = [k] + ['Available'] * len({{user.algo}})
+    for k in {{user.env | potc}}:
+        tmp = [k] + ['Available'] * len({{user.algo | potc}})
         data.append(tmp)
     info = tabulate(data, headers=headers, tablefmt='grid')
     print(info)

@@ -1,13 +1,14 @@
 import re
-from rich import print
-from InquirerPy import inquirer
-from InquirerPy.validator import PathValidator, EmptyInputValidator
 
+from InquirerPy import inquirer
+from InquirerPy.validator import EmptyInputValidator
 from igm.conf import InquireRestart
 from igm.env import env
+from rich import print
+
 from igmdi.data import env_choices, algo_choices, subenv_choices, env_doc_link, algo_doc_link, filter_algo_choices
-from igmdi.utils import pretty_print
 from igmdi.runnable import generate_runnable_entry
+from igmdi.utils import pretty_print
 
 
 def seed_filter(s):

@@ -1,7 +1,8 @@
 import os
+
 import ding
 
-on_policy_algo = set(['a2c', 'ppo'])
+on_policy_algo = {'a2c', 'ppo'}
 
 
 def generate_runnable_entry(metadata):
