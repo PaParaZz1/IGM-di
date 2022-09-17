@@ -25,6 +25,7 @@ igm_project(
         None: cpy('main.py'),
         'info': info,
         'tbviz': 'tensorboard --logdir=. --bind_all',
+        'replay': cpy('replay.py'),
         'install': cpip('install', '-r', 'requirements.txt'),
     }
 )

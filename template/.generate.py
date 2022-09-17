@@ -6,11 +6,21 @@ from igm.env import user
 from igm.render import igm_script
 
 _MULTI_SEED_CODE = """
-import os
+import time
+import subprocess
 
 if __name__ == "__main__":
+    handles = []
     for s in placeholder:
-        os.popen('python3 -u main_seed{}.py'.format(s))
+        handles.append(subprocess.Popen('python3 -u main_seed{}.py'.format(s), shell=True))
+    flag = [False for i in range(len(handles))]
+    while True:
+        for i in range(len(handles)):
+            if not flag[i] and handles[i].poll() is not None:
+                flag[i] = True
+        if sum(flag) == len(flag):
+            break
+        time.sleep(1)
 """
 
 
